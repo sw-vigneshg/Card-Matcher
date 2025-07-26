@@ -152,6 +152,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e90289b98c163f4f8f4b720aa3358e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CardPrefab: {fileID: 1283561453834077319, guid: 38231f399966c6942bca6644de2b859e, type: 3}
+  CardObjects: []
+  AllCardData: []
+  RowCount: 4
+  ColoumnCount: 4
+  CardBack: {r: 0.8018868, g: 0.8018868, b: 0.8018868, a: 1}
+  CardFront: {r: 0.8000001, g: 0.8000001, b: 0.8000001, a: 1}
+  WrongMatch: {r: 0.9056604, g: 0.24446726, b: 0.11448912, a: 1}
+  CorrectMatch: {r: 0.18880486, g: 1, b: 0, a: 1}
 --- !u!4 &329758766
 Transform:
   m_ObjectHideFlags: 0
@@ -244,7 +253,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: 3, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
