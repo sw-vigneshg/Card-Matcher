@@ -31,12 +31,16 @@ public class UIController : MonoBehaviour
             ExitGame.onClick.AddListener(() => { Controller.OnExitGame(); });
             NextLevel.onClick.AddListener(() => { OnStartGame(true, true); });
         }
+    }
 
+    private void Start()
+    {
         OnStartGame(false);
     }
 
     public void OnStartGame(bool isOn, bool isGameStarts = false)
     {
+        Controller.RetrrivePlayerData();
         CardsHoler.SetActive(isOn);
         InGamePanel.SetActive(isOn);
         LobbyPanel.SetActive(!isOn);
@@ -50,6 +54,12 @@ public class UIController : MonoBehaviour
         InGamePanel.SetActive(false);
         ResultPanel.SetActive(true);
         ResultInfo.text = $"\n CONGRATULATIONS!\n \nLevel {level} is Completed!\n";
+    }
+
+    public void HideResultPanel()
+    {
+        InGamePanel.SetActive(true);
+        ResultPanel.SetActive(false);
     }
 
     public void UpdateLevelText(int level)

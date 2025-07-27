@@ -28,7 +28,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Camera MainCamera;
     [SerializeField] private GameController Controller;
 
-
     public bool IsGameOver = false;
 
     private void Awake()
@@ -42,8 +41,14 @@ public class GameManager : MonoBehaviour
         CanFlip = false;
         RowCount = 2;
         ColoumnCount = 2;
-        Controller.UpdateLevel();
-        Controller.UpdateScore(0);
+        StreakCount = 0;
+        UIController.Instance.UpdateStreakText(StreakCount);
+    }
+
+    public void OnPlayerDataLoad(int currentLevel)
+    {
+        RowCount = currentLevel + 1;
+        ColoumnCount = currentLevel + 1;
     }
 
     public void StartGame()
@@ -164,6 +169,12 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+
+        for (int i = 0; i < tempList.Count; i++)
+        {
+            int swapIndex = Random.Range(i, tempList.Count);
+            (tempList[i], tempList[swapIndex]) = (tempList[swapIndex], tempList[i]);
+        }
         return tempList;
     }
 
@@ -175,8 +186,6 @@ public class GameManager : MonoBehaviour
         //    randomIndex = Random.Range(0, CardObjects.Count);
         //    (CardObjects[i].MyCardData, CardObjects[randomIndex].MyCardData) = (CardObjects[randomIndex].MyCardData, CardObjects[i].MyCardData);
         //}
-
-
 
         CanFlip = true;
     }
@@ -205,7 +214,7 @@ public class GameManager : MonoBehaviour
             CardHandler tempCard1 = CardObjects.Find(x => x == card1 && x.MyCardData.IsFlipped);
             CardHandler tempCard2 = CardObjects.Find(x => x == card2 && x.MyCardData.IsFlipped);
             bool isMatched = tempCard1.MyCardData.CardIndex == tempCard2.MyCardData.CardIndex;
-            bool isForceFlip = (RowCount == 3 && ColoumnCount == 3 && CardObjects.Where(x => x.gameObject.activeInHierarchy).Count() == 1);
+            bool isForceFlip = (RowCount == 3 && ColoumnCount == 3 && CardObjects.Where(x => !x.MyCardData.IsFlipped && x.gameObject.activeInHierarchy).Count() == 1);
 
             StreakCount = isMatched ? (StreakCount + 1) : 0;
             UIController.Instance.UpdateStreakText(StreakCount);
@@ -218,7 +227,7 @@ public class GameManager : MonoBehaviour
                 {
                     if (isForceFlip)
                     {
-                        CardHandler tempCard3 = CardObjects.Find(x => x.gameObject.activeInHierarchy);
+                        CardHandler tempCard3 = CardObjects.Find(x => !x.MyCardData.IsFlipped && x.gameObject.activeInHierarchy);
                         if (tempCard3 != null)
                         {
                             tempCard3.FlipCard();
@@ -234,7 +243,7 @@ public class GameManager : MonoBehaviour
                     tempCard2.gameObject.SetActive(false);
                     if (isForceFlip)
                     {
-                        CardObjects.Find(x => !x.MyCardData.IsFlipped)?.gameObject.SetActive(false);
+                        CardObjects.Find(x => x.gameObject.activeInHierarchy).gameObject.SetActive(false);
                         Controller.UpdateScore(1);
                     }
                     CheckGameOver();
@@ -256,7 +265,7 @@ public class GameManager : MonoBehaviour
 
     private void CheckGameOver()
     {
-        if (!CardObjects.Exists(x => !x.MyCardData.IsFlipped))
+        if (!CardObjects.Exists(x => x.gameObject.activeInHierarchy))
         {
             IsGameOver = true;
             AudioController.Instance.PlayAudio(AudioType.GameOver);
@@ -266,6 +275,7 @@ public class GameManager : MonoBehaviour
             {
                 item.OnReset();
             }
+            Debug.Log("GameOver");
             CancelInvoke(nameof(RestartGame));
             Invoke(nameof(RestartGame), 1f);
         }
@@ -275,7 +285,9 @@ public class GameManager : MonoBehaviour
     {
         Controller.UpdateLevel();
         StreakCount = 0;
+        UIController.Instance.UpdateStreakText(StreakCount);
         CanFlip = false;
+        Debug.LogError("GameOver Restarted");
     }
 
     public bool CanFlipCard() => CanFlip;
