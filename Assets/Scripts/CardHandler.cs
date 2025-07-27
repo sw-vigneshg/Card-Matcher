@@ -39,6 +39,11 @@ public class CardHandler : MonoBehaviour
 
     private void OnMouseDown()
     {
+        FlipCard();
+    }
+
+    public void FlipCard()
+    {
         if (MyCardData.IsFlipped)
             return;
 
