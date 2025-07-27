@@ -33,10 +33,27 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         GenerateCards();
+        AlignCamera();
         PreviousCard = null;
         CurrentCard = null;
         IsGameOver = false;
     }
+
+    private void AlignCamera()
+    {
+        float centerX = (RowCount / 2f) - 0.5f;
+        float centerY = (ColoumnCount / 2f) - 0.5f;
+        MainCamera.transform.position = new Vector3(centerX, centerY, -10f);
+
+        float screenAspect = (float)Screen.width / Screen.height;
+
+        float requiredVerticalSize = (centerX / 2f + 1.5f) / screenAspect;
+        float requiredHorizontalSize = (centerY / 2f + 1.5f) / screenAspect;
+
+        MainCamera.orthographicSize = Mathf.Max(requiredVerticalSize, requiredHorizontalSize);
+    }
+
+
 
     public List<CardData> TempList = new List<CardData>();
 
@@ -54,8 +71,8 @@ public class GameManager : MonoBehaviour
         int cardIndex = 0;
         CardData tempData = new CardData();
 
-        float spaceX = 1.3f;
-        float spaceY = 1.5f;
+        //float spaceX = 1.3f;
+        //float spaceY = 1.5f;
         Vector3 position;
 
         TempList = GetCardDetails();
@@ -64,8 +81,8 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < ColoumnCount; j++)
             {
-                position.x = i * spaceX;
-                position.y = j * spaceY;
+                position.x = i;
+                position.y = j;
                 position.z = 0f;
 
                 CardHandler card = PoolManager.GetCards();
@@ -118,11 +135,11 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                randomCount = Random.Range(0, tempList.Count);
+                randomCount = Random.Range(0, AllCardData.Length);
                 tempList.Add(new CardData()
                 {
-                    CardIndex = tempList[randomIndex].CardIndex,
-                    CardName = tempList[randomIndex].CardName,
+                    CardIndex = AllCardData[randomIndex].CardIndex,
+                    CardName = AllCardData[randomIndex].CardName,
                     IsFlipped = false,
                 });
             }
