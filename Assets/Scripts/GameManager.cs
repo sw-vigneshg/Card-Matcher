@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int RowCount;
     [SerializeField] private int ColoumnCount;
     [SerializeField] private int StreakCount;
+    [SerializeField] private bool CanFlip = false;
 
     [SerializeField] private Color CardFront;
     [SerializeField] private Color WrongMatch;
@@ -27,6 +28,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Camera MainCamera;
     [SerializeField] private GameController Controller;
 
+
     public bool IsGameOver = false;
 
     private void Awake()
@@ -37,6 +39,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         GenerateCardsData();
+        CanFlip = false;
         RowCount = 2;
         ColoumnCount = 2;
         Controller.UpdateLevel();
@@ -126,14 +129,18 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        ShuffleCards();
+        foreach (CardHandler card in CardObjects)
+        {
+            card.AssignCardNameText();
+        }
+        CancelInvoke(nameof(ShuffleCards));
+        Invoke(nameof(ShuffleCards), 2f);
     }
 
     private List<CardData> GetCardDetails()
     {
         List<CardData> tempList = new List<CardData>();
         int totalCards = RowCount * ColoumnCount;
-
         int randomCount = 0;
         int randomIndex = 0;
         randomCount = 2;
@@ -169,10 +176,9 @@ public class GameManager : MonoBehaviour
         //    (CardObjects[i].MyCardData, CardObjects[randomIndex].MyCardData) = (CardObjects[randomIndex].MyCardData, CardObjects[i].MyCardData);
         //}
 
-        foreach (CardHandler card in CardObjects)
-        {
-            card.AssignCardNameText();
-        }
+
+
+        CanFlip = true;
     }
 
     public void ValidateSelectedCards(CardHandler card)
@@ -269,7 +275,10 @@ public class GameManager : MonoBehaviour
     {
         Controller.UpdateLevel();
         StreakCount = 0;
+        CanFlip = false;
     }
+
+    public bool CanFlipCard() => CanFlip;
 }
 
 [System.Serializable]

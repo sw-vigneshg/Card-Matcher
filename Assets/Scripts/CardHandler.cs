@@ -15,7 +15,7 @@ public class CardHandler : MonoBehaviour
     private void OnEnable()
     {
         _GameManager = GameManager.Instance;
-        
+
         StopCoroutine(nameof(OnStart));
         StartCoroutine(nameof(OnStart));
     }
@@ -23,7 +23,7 @@ public class CardHandler : MonoBehaviour
     private IEnumerator OnStart()
     {
         FlipAnimator.SetBool("FlipFront", true);
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1f);
         OnReset();
     }
 
@@ -39,7 +39,9 @@ public class CardHandler : MonoBehaviour
 
     private void OnMouseDown()
     {
-        FlipCard();
+        Debug.Log($"Can Flip : {_GameManager.CanFlipCard()}");
+        if (_GameManager.CanFlipCard())
+            FlipCard();
     }
 
     public void FlipCard()
@@ -48,7 +50,6 @@ public class CardHandler : MonoBehaviour
             return;
 
         MyCardData.IsFlipped = true;
-
         CardFront.gameObject.SetActive(true);
         _GameManager.ValidateSelectedCards(this);
         FlipAnimator.SetBool("FlipFront", true);
