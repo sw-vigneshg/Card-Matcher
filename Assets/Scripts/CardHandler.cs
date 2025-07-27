@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class CardHandler : MonoBehaviour
 {
     public CardData MyCardData;
+    [SerializeField] private SpriteRenderer CardBack;
     [SerializeField] private SpriteRenderer CardFront;
     [SerializeField] private TMP_Text CardNameText;
     private GameManager _GameManager;
@@ -14,7 +15,9 @@ public class CardHandler : MonoBehaviour
     private void OnEnable()
     {
         _GameManager = GameManager.Instance;
-        CardFront.gameObject.SetActive(false);
+        CardFront.gameObject.SetActive(true);
+        CancelInvoke(nameof(OnReset));
+        Invoke(nameof(OnReset), 1f);
         //FlipAnimator.SetBool("FlipFront", false);
         //FlipAnimator.SetBool("FlipBack", false);
     }
@@ -51,5 +54,10 @@ public class CardHandler : MonoBehaviour
     {
         MyCardData.IsFlipped = false;
         CardFront.gameObject.SetActive(false);
+    }
+
+    public void DisableCard(bool isMatched)
+    {
+        this.gameObject.SetActive(!isMatched);
     }
 }

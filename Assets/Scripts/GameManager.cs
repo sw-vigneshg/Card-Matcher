@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -16,8 +17,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Color CorrectMatch;
 
     [SerializeField] private PoolManager PoolManager;
-
+    [SerializeField] private CardHandler PreviousCard;
+    [SerializeField] private CardHandler CurrentCard;
     [SerializeField] private List<CardHandler> SelectedCards = new();
+
+    [SerializeField] private Camera MainCamera;
 
     private void Awake()
     {
@@ -27,6 +31,8 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         GenerateCards();
+        PreviousCard = null;
+        CurrentCard = null;
     }
 
     public void GenerateCards()
@@ -90,24 +96,99 @@ public class GameManager : MonoBehaviour
         }
     }
 
+
     public void ValidateSelectedCards(CardHandler card)
     {
         if (card == null)
             return;
 
-        if (!SelectedCards.Contains(card))
-            SelectedCards.Add(card);
-
-        if (SelectedCards.Count > 1)
+        if (PreviousCard == null)
         {
-            bool isNotMatched = SelectedCards.Exists(x => x.MyCardData.CardIndex != card.MyCardData.CardIndex);
-            foreach (CardHandler cards in SelectedCards)
+            PreviousCard = card;
+            AddToSelectedCards(card);
+            return;
+        }
+
+        CurrentCard = card;
+        AddToSelectedCards(card);
+        HighlightCard();
+    }
+
+    private void HighlightCard()
+    {
+        if (PreviousCard != null && CurrentCard != null)
+        {
+            if (CurrentCard.MyCardData.CardIndex == PreviousCard.MyCardData.CardIndex)
             {
-                cards.OnMatch(isNotMatched ? WrongMatch : CorrectMatch);
-                if (isNotMatched)
-                    cards.OnReset();
+                if (CardObjects.Exists(x => x == CurrentCard && x.MyCardData.IsFlipped))
+                {
+                    CardObjects.Find(x => x == CurrentCard && x.MyCardData.IsFlipped).OnMatch(CorrectMatch);
+                }
+
+                if (CardObjects.Exists(x => x == PreviousCard && x.MyCardData.IsFlipped))
+                {
+                    CardObjects.Find(x => x == PreviousCard && x.MyCardData.IsFlipped).OnMatch(CorrectMatch);
+                }
+
+                CancelInvoke(nameof(DisableCards));
+                Invoke(nameof(DisableCards), 2f);
+            }
+            else
+            {
+                foreach (CardHandler item in SelectedCards)
+                {
+                    if (CardObjects.Exists(x => x == item && x.MyCardData.IsFlipped))
+                    {
+                        CardObjects.Find(x => x == item && x.MyCardData.IsFlipped).OnMatch(WrongMatch);
+                    }
+                }
+
+                CancelInvoke(nameof(OnResetCards));
+                Invoke(nameof(OnResetCards), 2f);
             }
         }
+    }
+
+    private void DisableCards()
+    {
+        foreach (CardHandler item in SelectedCards)
+        {
+            item.DisableCard(true);
+        }
+
+        if (SelectedCards.Count > 0)
+            SelectedCards.Clear();
+
+        CurrentCard = null;
+        PreviousCard = null;
+    }
+
+    private void OnResetCards()
+    {
+        foreach (CardHandler item in SelectedCards)
+        {
+            if (CardObjects.Exists(x => x.MyCardData.CardIndex == item.MyCardData.CardIndex && x.MyCardData.IsFlipped))
+            {
+                CardHandler card = CardObjects.Find(x => x.MyCardData.CardIndex == item.MyCardData.CardIndex && x.MyCardData.IsFlipped);
+                if (card != null)
+                {
+                    card.OnMatch(CardFront);
+                    card.OnReset();
+                }
+            }
+        }
+
+        if (SelectedCards.Count > 0)
+            SelectedCards.Clear();
+
+        CurrentCard = null;
+        PreviousCard = null;
+    }
+
+    private void AddToSelectedCards(CardHandler card)
+    {
+        if (!SelectedCards.Contains(card))
+            SelectedCards.Add(card);
     }
 }
 
