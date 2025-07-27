@@ -10,16 +10,21 @@ public class CardHandler : MonoBehaviour
     [SerializeField] private SpriteRenderer CardFront;
     [SerializeField] private TMP_Text CardNameText;
     private GameManager _GameManager;
-    //[SerializeField] private Animator FlipAnimator;
+    [SerializeField] private Animator FlipAnimator;
 
     private void OnEnable()
     {
         _GameManager = GameManager.Instance;
-        CardFront.gameObject.SetActive(true);
-        CancelInvoke(nameof(OnReset));
-        Invoke(nameof(OnReset), 1f);
-        //FlipAnimator.SetBool("FlipFront", false);
-        //FlipAnimator.SetBool("FlipBack", false);
+        
+        StopCoroutine(nameof(OnStart));
+        StartCoroutine(nameof(OnStart));
+    }
+
+    private IEnumerator OnStart()
+    {
+        FlipAnimator.SetBool("FlipFront", true);
+        yield return new WaitForSeconds(2f);
+        OnReset();
     }
 
     public void AssignCardData(CardData data)
@@ -39,10 +44,10 @@ public class CardHandler : MonoBehaviour
 
         MyCardData.IsFlipped = true;
 
-        //FlipAnimator.SetBool("FlipFront", true);
-
         CardFront.gameObject.SetActive(true);
         _GameManager.ValidateSelectedCards(this);
+        FlipAnimator.SetBool("FlipFront", true);
+        AudioController.Instance.PlayAudio(AudioType.Flip);
     }
 
     public void OnMatch(Color color)
@@ -54,6 +59,8 @@ public class CardHandler : MonoBehaviour
     {
         MyCardData.IsFlipped = false;
         CardFront.gameObject.SetActive(false);
+        FlipAnimator.SetBool("FlipFront", false);
+        AudioController.Instance.PlayAudio(AudioType.Flip);
     }
 
     public void DisableCard(bool isMatched)

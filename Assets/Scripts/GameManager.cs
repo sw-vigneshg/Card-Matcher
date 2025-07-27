@@ -1,5 +1,5 @@
+using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private Camera MainCamera;
 
+    public bool IsGameOver = false;
+
     private void Awake()
     {
         Instance = this;
@@ -33,13 +35,19 @@ public class GameManager : MonoBehaviour
         GenerateCards();
         PreviousCard = null;
         CurrentCard = null;
+        IsGameOver = false;
     }
+
+    public List<CardData> TempList = new List<CardData>();
 
     public void GenerateCards()
     {
         if (CardObjects.Count > 0)
         {
-            CardObjects.Clear();
+            foreach (CardHandler item in CardObjects)
+            {
+                PoolManager.ReturnCardToPool(item);
+            }
             Debug.LogError("Card Objects list is not Empty");
         }
 
@@ -49,6 +57,8 @@ public class GameManager : MonoBehaviour
         float spaceX = 1.3f;
         float spaceY = 1.5f;
         Vector3 position;
+
+        TempList = GetCardDetails();
 
         for (int i = 0; i < RowCount; i++)
         {
@@ -66,19 +76,59 @@ public class GameManager : MonoBehaviour
 
                     tempData = new()
                     {
-                        CardIndex = AllCardData[cardIndex].CardIndex,
-                        CardName = AllCardData[cardIndex].CardName,
+                        CardIndex = TempList[cardIndex].CardIndex,
+                        CardName = TempList[cardIndex].CardName,
                         IsFlipped = false,
                     };
                     card.AssignCardData(tempData);
                     cardIndex++;
-                    cardIndex = cardIndex <= AllCardData.Length - 1 ? cardIndex : 0;
 
                     CardObjects.Add(card);
                 }
             }
         }
         ShuffleCards();
+    }
+
+    private List<CardData> GetCardDetails()
+    {
+        List<CardData> tempList = new List<CardData>();
+        int totalCards = RowCount * ColoumnCount;
+
+        int randomCount = 0;
+        int randomIndex = 0;
+        bool isEven = (totalCards % 2 == 0);
+
+        while (tempList.Count < totalCards)
+        {
+            randomIndex = Random.Range(0, AllCardData.Length);
+            randomCount = isEven ? 2 : Random.Range(2, 4);
+
+            if (tempList.Count <= 0 || !tempList.Exists(x => x.CardIndex == AllCardData[randomIndex].CardIndex))
+            {
+                for (int i = 0; i < randomCount; i++)
+                {
+                    tempList.Add(new CardData()
+                    {
+                        CardIndex = AllCardData[randomIndex].CardIndex,
+                        CardName = AllCardData[randomIndex].CardName,
+                        IsFlipped = false,
+                    });
+                }
+            }
+            else
+            {
+                randomCount = Random.Range(0, tempList.Count);
+                tempList.Add(new CardData()
+                {
+                    CardIndex = tempList[randomIndex].CardIndex,
+                    CardName = tempList[randomIndex].CardName,
+                    IsFlipped = false,
+                });
+            }
+        }
+
+        return tempList;
     }
 
     private void ShuffleCards()
@@ -110,12 +160,14 @@ public class GameManager : MonoBehaviour
         }
 
         CurrentCard = card;
-        AddToSelectedCards(card);
-        HighlightCard();
+        StopCoroutine(nameof(HighlightCard));
+        StartCoroutine(nameof(HighlightCard));
     }
 
-    private void HighlightCard()
+    private IEnumerator HighlightCard()
     {
+        yield return new WaitForSeconds(0.4f);
+        AddToSelectedCards(CurrentCard);
         if (PreviousCard != null && CurrentCard != null)
         {
             if (CurrentCard.MyCardData.CardIndex == PreviousCard.MyCardData.CardIndex)
@@ -129,7 +181,7 @@ public class GameManager : MonoBehaviour
                 {
                     CardObjects.Find(x => x == PreviousCard && x.MyCardData.IsFlipped).OnMatch(CorrectMatch);
                 }
-
+                AudioController.Instance.PlayAudio(AudioType.PerfectMatch);
                 CancelInvoke(nameof(DisableCards));
                 Invoke(nameof(DisableCards), 2f);
             }
@@ -142,7 +194,8 @@ public class GameManager : MonoBehaviour
                         CardObjects.Find(x => x == item && x.MyCardData.IsFlipped).OnMatch(WrongMatch);
                     }
                 }
-
+                AudioController.Instance.PlayAudio(AudioType.WrongMatch);
+                CancelInvoke(nameof(DisableCards));
                 CancelInvoke(nameof(OnResetCards));
                 Invoke(nameof(OnResetCards), 2f);
             }
@@ -156,11 +209,19 @@ public class GameManager : MonoBehaviour
             item.DisableCard(true);
         }
 
-        if (SelectedCards.Count > 0)
-            SelectedCards.Clear();
-
         CurrentCard = null;
         PreviousCard = null;
+
+        CheckGameOver();
+    }
+
+    private void CheckGameOver()
+    {
+        if (SelectedCards.Count >= CardObjects.Count)
+        {
+            IsGameOver = true;
+            AudioController.Instance.PlayAudio(AudioType.GameOver);
+        }
     }
 
     private void OnResetCards()
